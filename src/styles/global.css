@@ -1,0 +1,19 @@
+/* Set font-family globally */
+body {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: small !important;
+  color: #333 !important
+}
+
+table {
+  padding: 0;
+  margin: 0;
+}
+
+tbody {
+  padding: 0;
+  margin: 0;
+}
+
+
+/* Specifically target frozen column headers */
