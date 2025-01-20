@@ -2,7 +2,8 @@
 body {
   font-family: 'Poppins', sans-serif !important;
   font-size: small !important;
-  color: #333 !important
+  color: #333 !important;
+  background-color: #ffffff;
 }
 
 table {
@@ -15,5 +16,26 @@ tbody {
   margin: 0;
 }
 
+/* Menu Bar Styling */
+.p-menubar {
+  background-color: #e6f5e6; /* Light green background */
+  border: none;
+}
 
+.p-menubar .p-menuitem-link {
+  color: #4CAF50 !important; /* Green color for text */
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.p-menubar .p-menuitem-link:hover {
+  background-color: #34495E; /* Darker background on hover */
+  color: #ffffff;
+}
+
+/* Button Styles for Menubar */
+.p-button-outlined {
+  color: #4CAF50 !important; /* Green color for the button text */
+  border-color: #ecf0f1;
+}
 /* Specifically target frozen column headers */

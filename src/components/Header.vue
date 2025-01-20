@@ -1,169 +1,176 @@
 <template>
-  <div class="header-container shadow-md">
     <!-- Menu Bar -->
-    <Menubar :model="menuItems">
+    <Menubar :model="filteredMenuItems">
       <template #start>
-        <span class="text-xl font-bold text-white">Solid Waste Management System</span>
+        <span class="text-xl font-bold text-gray-800">Solid Waste Management System</span>
       </template>
       <template #end>
-        <!-- Button to trigger the login modal -->
-        <Button label="Login" icon="pi pi-user" class="p-button-outlined p-button-lg" @click="showLoginModal = true" />
+        <!-- Login or Logout Button -->
+        <Button 
+          v-if="!isLoggedIn" 
+          label="Login" 
+          icon="pi pi-user" 
+          class="p-button-outlined p-button-lg" 
+          @click="showLoginModal = true" 
+        />
+        <Button 
+          v-if="isLoggedIn" 
+          label="Logout" 
+          icon="pi pi-sign-out" 
+          class="p-button-outlined p-button-lg" 
+          @click="logout" 
+        />
       </template>
     </Menubar>
-  </div>
 
-  <!-- Login Modal -->
-  <Dialog header="Login" v-model:visible="showLoginModal" modal class="login-modal">
-    <div class="p-fluid">
-      <div class="p-field">
-        <label for="username" class="label">Username</label>
-        <InputText id="username" v-model="username" placeholder="Enter your username" class="input-field" />
+    <!-- Login Modal -->
+    <Dialog 
+      header="Login" 
+      v-model:visible="showLoginModal" 
+      modal 
+      class="login-modal p-dialog-lg" 
+      style="width: 40vw; max-width: 500px;"
+    >
+      <!-- Logo -->
+      <div class="flex justify-center mb-6">
+        <img src="assets/logo.png" alt="Logo" class="h-25 w-auto" />
       </div>
-      <div class="p-field">
-        <label for="password" class="label">Password</label>
-        <InputText type="password" id="password" v-model="password" placeholder="Enter your password" class="input-field" feedback />
+
+      <div class="p-fluid">
+        <!-- Email Field -->
+        <div class="p-field mb-4">
+          <label for="email" class="block text-lg font-medium text-gray-700 mb-2">Email</label>
+          <InputText 
+            id="email" 
+            v-model="email" 
+            placeholder="Enter your email" 
+            class="p-inputtext-lg w-full" 
+          />
+        </div>
+
+        <!-- Password Field -->
+        <div class="p-field mb-6">
+          <label for="password" class="block text-lg font-medium text-gray-700 mb-2">Password</label>
+          <InputText 
+            type="password" 
+            id="password" 
+            v-model="password" 
+            placeholder="Enter your password" 
+            class="p-inputtext-lg w-full" 
+          />
+        </div>
+
+        <!-- Login Button -->
+        <div class="p-field button-container">
+          <Button 
+            label="Login" 
+            icon="pi pi-sign-in" 
+            class="p-button-lg p-button-success w-full login-btn" 
+            @click="login" 
+          />
+        </div>
       </div>
-      <div class="p-field button-container">
-        <Button label="Login" icon="pi pi-sign-in" class="p-button-success w-full login-btn" @click="login" />
-      </div>
-    </div>
-  </Dialog>
+    </Dialog>
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   name: "HeaderVue",
   data() {
     return {
       showLoginModal: false, // Controls modal visibility
-      username: '', // Username input field
-      password: '', // Password input field
-      menuItems: [
-        // Your menu items here (optional for now)
-      ]
+      isLoggedIn: false, // Indicates if the user is logged in
+      email: "", // Email input
+      password: "", // Password input
+      abilities: [], // User's access levels
     };
   },
+  computed: {
+    filteredMenuItems() {
+      // Generate menu items dynamically based on abilities
+      return this.abilities.map((ability) => {
+        const routes = {
+          announcement: { label: "Announcement", icon: "pi pi-megaphone", page: "AnnouncementPage" },
+          messages: { label: "Messages", icon: "pi pi-comments", page: "MessagePage" },
+          account_management: { label: "Account Management", icon: "pi pi-users", page: "AccountManagementPage" },
+          concern: { label: "Concerns", icon: "pi pi-comments", page: "ConcernPage" },
+          reports_and_analytics: { label: "Reports and Analytics", icon: "pi pi-file", page: "ReportPage" },
+          complain:{ label: "Complain", icon: "pi pi-folder-open", page: "ComplainPage"},
+        };
+
+        const route = routes[ability];
+        return route
+          ? {
+              label: route.label,
+              icon: route.icon,
+              command: () => this.navigateTo(route.page),
+            }
+          : null;
+      }).filter((item) => item !== null); // Filter out null entries
+    },
+  },
   methods: {
-    login() {
-      // Handle login logic here
-      console.log('Logging in with:', this.username, this.password);
-      this.showLoginModal = false; // Close the modal after login
+    async login() {
+      try {
+        const response = await axios.post("http://127.0.0.1:8000/api/login", {
+          email: this.email,
+          password: this.password,
+        });
+
+        // Save token to localStorage
+        localStorage.setItem("auth_token", response.data.access_token);
+
+        // Set token in axios headers
+        axios.defaults.headers.common["Authorization"] = `Bearer ${localStorage.getItem("auth_token")}`;
+
+        // Set login state
+        this.isLoggedIn = true;
+        this.showLoginModal = false;
+
+        // Fetch user abilities
+        await this.fetchAbilities();
+
+        // Redirect to dashboard
+        this.$router.push("/DashboardPage");
+      } catch (error) {
+        console.error("Login failed:", error);
+      }
+    },
+    logout() {
+      localStorage.removeItem("auth_token");
+      this.isLoggedIn = false;
+      this.abilities = [];
+      this.$router.push("/");
+    },
+    async fetchAbilities() {
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user/access-levels");
+        this.abilities = response.data.access_levels || [];
+      } catch (error) {
+        console.error("Error fetching abilities:", error);
+        this.abilities = [];
+      }
+    },
+    navigateTo(page) {
+      this.$router.push({ name: page });
+    },
+  },
+  async mounted() {
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      this.isLoggedIn = true;
+      await this.fetchAbilities();
     }
-  }
+  },
 };
 </script>
 
 <style scoped>
-/* Header styling */
 .header-container {
-  background-color: #2C3E50; /* Dark header background */
-}
-
-/* Menu Bar Text */
-.menubar .p-menubar-start {
-  color: white;
-}
-
-/* Modal Styling */
-.login-modal .p-dialog {
-  width: 400px;
-  border-radius: 8px;
-  padding: 30px;
-  background-color: #f9f9f9;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-/* Label Styling */
-.label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
-  display: block;
-}
-
-/* Input Field Styling */
-.input-field {
-  border-radius: 6px;
-  background-color: #fafafa;
-  padding: 12px;
-  border: 1px solid #ccc;
-  width: 100%;
-  font-size: 16px;
-}
-
-.input-field:focus {
-  border-color: #4CAF50; /* Green focus color */
-  outline: none;
-  box-shadow: 0 0 5px rgba(76, 175, 80, 0.5); /* Green focus shadow */
-}
-
-/* Button Styling */
-.login-btn {
-  border-radius: 6px;
-  font-size: 16px;
-  padding: 12px;
-  font-weight: bold;
-  background-color: #4CAF50; /* Green color */
-  border: none;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  width: auto;
-  margin: 0 auto; /* Centering button */
-}
-
-.login-btn:hover {
-  background-color: #45a049; /* Darker green on hover */
-  transform: translateY(-3px);
-}
-
-.login-btn:focus {
-  outline: none;
-}
-
-/* Button Container */
-.button-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-/* Responsive Styling */
-@media (max-width: 600px) {
-  .login-modal .p-dialog {
-    width: 90%;
-    padding: 20px 10px;
-  }
-
-  .login-btn {
-    font-size: 14px;
-    padding: 10px;
-  }
-}
-
-/* Menubar Styling */
-.p-menubar {
-  background-color: #2C3E50; /* Dark header background */
-  border: none;
-}
-
-.p-menubar .p-menuitem-link {
-  color: #ecf0f1;
-  font-size: 16px;
-}
-
-.p-menubar .p-menuitem-link:hover {
-  background-color: #34495E; /* Darker background on hover */
-  color: #ffffff;
-}
-
-/* Button Styles for Menubar */
-.p-button-outlined {
-  color: #ecf0f1; /* White color for text */
-  border-color: #ecf0f1;
-}
-
-.p-button-outlined:hover {
-  background-color: #34495E; /* Darker color on hover */
-  border-color: #ecf0f1;
+  padding: 0 20px;
+  background: #f8f9fa;
 }
 </style>

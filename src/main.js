@@ -28,8 +28,13 @@ import Password from 'primevue/password';
 import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
 import MultiSelect from 'primevue/multiselect';
+import  DatePicker  from 'primevue/datepicker';
+import FileUpload from 'primevue/fileupload';
 import '../src/styles/global.css';
 import router from './router.js'; // Import router
+import Toast from 'primevue/toast';
+import  Textarea  from 'primevue/textarea';
+import {useToast}  from 'primevue/usetoast';
 
 const app = createApp(App);
 
@@ -63,7 +68,12 @@ const components = {
     Password,
     Checkbox,
     RadioButton,
-    MultiSelect
+    MultiSelect,
+    DatePicker,
+    FileUpload,
+    Toast,
+    Textarea,
+    useToast,
 };
 
 

@@ -1,48 +1,32 @@
 <template>
-  <div class="flex flex-col min-h-screen bg-gray-50">
-    <!-- Header -->
-    <Header />
-
+  <div class="flex flex-col min-h-screen">
     <!-- Banner -->
-    <div class="w-full bg-gradient-to-r from-green-600 to-green-500 flex items-center justify-center text-center text-white relative"
-      style="height: 30vh;">
-      <div class="absolute inset-0 bg-black opacity-50"></div> <!-- Subtle Overlay -->
-      <div class="relative z-10 px-6 sm:px-8">
-        <!-- Main Heading -->
-        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-semibold text-white mb-6">
-          Solid Waste Management System
-        </h1>
-      </div>
-    </div>
-
-    <!-- Our Services Section -->
-    <div class="text-center py-16 px-6 sm:px-8 lg:px-12 bg-gray-100">
-      <h2 class="text-xl sm:text-4xl font-semibold text-gray-800">Our Services</h2>
-      <p class="mt-6 text-lg text-gray-700 max-w-4xl mx-auto">
-        Explore our services designed to enhance waste management, sustainability, and keep you informed about the latest updates.
-      </p>
+    <div
+      class="w-full bg-cover bg-center flex items-center justify-center text-center text-white relative"
+      style="background-image: url('/assets/swms_banner_dark.png'); height: 60vh;"
+    >
+      <h1 class="text-4xl font-bold text-shadow-lg">Welcome to SWMS</h1>
     </div>
 
     <!-- Services Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-6 sm:px-8 lg:px-12 py-8">
       <!-- Card 1: Submit Complaints -->
       <p-card class="service-card bg-red-600">
-      <template #title>
-        <h3 class="text-xl font-semibold text-gray">Submit Concerns</h3>
-      </template>
-      <template #content>
-        <p class="text-gray">Easily submit waste management complaints.</p>
-      </template>
-      <template #footer>
-        <!-- Button to navigate to ComplainPage -->
-        <Button
-          label="View Reports"
-          icon="pi pi-file"
-          class="w-full p-button-success p-button-text"
-          @click="goToComplainPage"
-        />
-      </template>
-    </p-card>
+        <template #title>
+          <h3 class="text-xl font-semibold text-gray">Submit Concerns</h3>
+        </template>
+        <template #content>
+          <p class="text-gray">Easily submit waste management complaints.</p>
+        </template>
+        <template #footer>
+          <Button
+            label="Submit Complaint"
+            icon="pi pi-file"
+            class="w-full p-button-success p-button-text"
+            @click="goToComplainPage"
+          />
+        </template>
+      </p-card>
 
       <!-- Card 2: Announcements -->
       <p-card class="service-card bg-green-600">
@@ -53,20 +37,41 @@
           <p class="text-gray">Stay updated with the latest announcements and notifications.</p>
         </template>
         <template #footer>
-          <Button label="View Announcements" icon="pi pi-megaphone" class="w-full p-button-info p-button-text" />
+          <Button
+            label="View Announcements"
+            icon="pi pi-megaphone"
+            class="w-full p-button-info p-button-text"
+            @click="goToAnnouncementPage"
+          />
         </template>
       </p-card>
 
-      <!-- Card 3: Education -->
+      <!-- Card 3: Analytics -->
       <p-card class="service-card bg-blue-600">
         <template #title>
-          <h3 class="text-xl font-semibold text-gray">Education</h3>
+          <h3 class="text-xl font-semibold text-gray">Analytics</h3>
         </template>
         <template #content>
-          <p class="text-gray">Learn more about recycling, sustainability, and waste management.</p>
-        </template>
-        <template #footer>
-          <Button label="Learn More" icon="pi pi-book" class="w-full p-button-text" />
+          <div class="flex flex-row gap-4">
+            <!-- Total Submitted Concerns -->
+            <p-card class="flex-1 bg-white text-center">
+              <template #title>
+                <h4 class="text-sm font-semibold text-blue-600">Total No. Concerns</h4>
+              </template>
+              <template #content>
+                <p class="text-xl font-bold text-gray-800">123</p>
+              </template>
+            </p-card>
+            <!-- Total Resolved Concerns -->
+            <p-card class="flex-1 bg-white text-center">
+              <template #title>
+                <h4 class="text-sm font-semibold text-green-600">No. Resolved Concerns</h4>
+              </template>
+              <template #content>
+                <p class="text-xl font-bold text-gray-800">98</p>
+              </template>
+            </p-card>
+          </div>
         </template>
       </p-card>
     </div>
@@ -74,20 +79,32 @@
 </template>
 
 <script>
-import Header from "./Header.vue";
-import Card from 'primevue/card';
+import Card from "primevue/card";
 
 export default {
   name: "LandingPage",
-  components: { Header, 'p-card': Card },
-   methods: {
+  components: { "p-card": Card },
+  created() {
+    this.checkIfLoggedIn();
+  },
+  methods: {
+    checkIfLoggedIn() {
+      const token = localStorage.getItem("auth_token");
+      if (token) {
+        // Redirect to dashboard if logged in
+        this.$router.push({ name: "DashboardPage" });
+      }
+    },
     goToComplainPage() {
-      // Use Vue Router to navigate to ComplainPage
-      this.$router.push({ name: 'ComplainPage' });
-    }
-  }
+      this.$router.push({ name: "ComplainPage" });
+    },
+    goToAnnouncementPage() {
+      this.$router.push({ name: "DashboardPage" });
+    },
+  },
 };
 </script>
+
 
 <style scoped>
 /* Banner Section */
