@@ -5,8 +5,21 @@
 
       <!-- Tabs for Different Stages -->
       <div class="flex space-x-4 mb-4">
-        <button @click="activeTab = 'pending'" :class="{ 'bg-green-500 text-white': activeTab === 'pending' }" class="px-4 py-2 rounded-lg">Pending Verification</button>
-        <button @click="activeTab = 'assigned'" :class="{ 'bg-blue-500 text-white': activeTab === 'assigned' }" class="px-4 py-2 rounded-lg">Assigned Concerns</button>
+        <button 
+          v-if="authRole === 'Barangay Admin' || authRole === 'Barangay superadmin'"
+          @click="activeTab = 'pending'" 
+          :class="{ 'bg-green-500 text-white': activeTab === 'pending' }" 
+          class="px-4 py-2 rounded-lg">
+            Pending Verification
+        </button>
+        <button
+          v-if="authRole === 'LGU Officer'"
+          @click="activeTab = 'assigned'"
+          :class="{ 'bg-blue-500 text-white': activeTab === 'assigned' }"
+          class="px-4 py-2 rounded-lg"
+        >
+          Assign Concerns
+      </button>
         <button @click="activeTab = 'all'" :class="{ 'bg-gray-500 text-white': activeTab === 'all' }" class="px-4 py-2 rounded-lg">All Concerns</button>
       </div>
 
@@ -87,6 +100,7 @@ export default {
       concerns: [],
       drivers: [], // List of drivers
       activeTab: 'pending', // default to 'pending' tab
+      authRole: null, // Store the role from localStorage
     };
   },
   computed: {
@@ -192,6 +206,7 @@ export default {
     },
   },
   mounted() {
+    this.authRole = localStorage.getItem("auth_role"); // Get value when component is created
     this.fetchConcerns();
   },
 };

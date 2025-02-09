@@ -5,7 +5,6 @@
       class="w-full bg-cover bg-center flex items-center justify-center text-center text-white relative"
       style="background-image: url('/assets/swms_banner_dark.png'); height: 60vh;"
     >
-      <h1 class="text-4xl font-bold text-shadow-lg">Welcome to SWMS</h1>
     </div>
 
     <!-- Services Cards -->
@@ -59,7 +58,7 @@
                 <h4 class="text-sm font-semibold text-blue-600">Total No. Concerns</h4>
               </template>
               <template #content>
-                <p class="text-xl font-bold text-gray-800">123</p>
+                <p class="text-xl font-bold text-gray-800">{{ analytics.totalConcerns }}</p>
               </template>
             </p-card>
             <!-- Total Resolved Concerns -->
@@ -68,7 +67,7 @@
                 <h4 class="text-sm font-semibold text-green-600">No. Resolved Concerns</h4>
               </template>
               <template #content>
-                <p class="text-xl font-bold text-gray-800">98</p>
+                <p class="text-xl font-bold text-gray-800">{{ analytics.resolvedConcerns }}</p>
               </template>
             </p-card>
           </div>
@@ -80,19 +79,37 @@
 
 <script>
 import Card from "primevue/card";
+import axios from "axios";
 
 export default {
   name: "LandingPage",
   components: { "p-card": Card },
+  data() {
+    return {
+      analytics: {
+        totalConcerns: 0,
+        resolvedConcerns: 0,
+      },
+    };
+  },
   created() {
     this.checkIfLoggedIn();
+    this.fetchAnalytics();
   },
   methods: {
     checkIfLoggedIn() {
       const token = localStorage.getItem("auth_token");
       if (token) {
-        // Redirect to dashboard if logged in
         this.$router.push({ name: "DashboardPage" });
+      }
+    },
+    async fetchAnalytics() {
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/analytics");
+        this.analytics.totalConcerns = response.data.total_concerns;
+        this.analytics.resolvedConcerns = response.data.resolved_concerns;
+      } catch (error) {
+        console.error("Failed to fetch analytics:", error);
       }
     },
     goToComplainPage() {
@@ -104,6 +121,7 @@ export default {
   },
 };
 </script>
+
 
 
 <style scoped>

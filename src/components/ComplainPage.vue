@@ -54,7 +54,7 @@ export default {
         { label: "Garbage not picked up", value: "Garbage not picked up" },
         { label: "No garbage pickup truck", value: "No garbage pickup truck" },
         { label: "Request for garbage pickup", value: "Request for garbage pickup" },
-        { label: "Too many garbage on the streets", value: "Too many garbage on the streets" },
+        { label: "Others", value: "Others" },
       ],
       form: {
         subject: null,

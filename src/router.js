@@ -9,6 +9,7 @@ import ReportPage from './components/ReportPage.vue';
 import AccountManagementPage from './components/AccountManagementPage.vue';
 import DashboardPage  from './components/DashboardPage.vue';
 import RoutesPage  from './components/AssignedRoutesPage.vue';
+import UserProfile from './components/UserProfile.vue';
 
 const routes = [
   {
@@ -55,6 +56,11 @@ const routes = [
     path: '/RoutesPage',
     name: 'RoutesPage',
     component: RoutesPage
+  },
+  {
+    path: '/UserProfile',
+    name: 'UserProfile',
+    component: UserProfile
   },
 ];
 

@@ -94,13 +94,14 @@ export default {
       // Generate menu items dynamically based on abilities
       return this.abilities.map((ability) => {
         const routes = {
-          announcement: { label: "Announcement", icon: "pi pi-megaphone", page: "AnnouncementPage" },
+          announcement: { label: "Announcement", icon: "pi pi-megaphone", page: "DashboardPage" },
           messages: { label: "Messages", icon: "pi pi-comments", page: "MessagePage" },
           account_management: { label: "Account Management", icon: "pi pi-users", page: "AccountManagementPage" },
           concern: { label: "Concerns", icon: "pi pi-comments", page: "ConcernPage" },
           reports_and_analytics: { label: "Reports and Analytics", icon: "pi pi-file", page: "ReportPage" },
           complain:{ label: "Complain", icon: "pi pi-folder-open", page: "ComplainPage"},
           routes:{ label: "Routes", icon: "pi pi-folder-open", page: "RoutesPage"},
+          profile:{ label: "User Profile", icon: "pi pi-user", page: "UserProfile"},
         };
 
         const route = routes[ability];
@@ -124,7 +125,7 @@ export default {
 
         // Save token to localStorage
         localStorage.setItem("auth_token", response.data.access_token);
-
+        localStorage.setItem("auth_role", response.data.role);
         // Set token in axios headers
         axios.defaults.headers.common["Authorization"] = `Bearer ${localStorage.getItem("auth_token")}`;
 

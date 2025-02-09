@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard">
     <!-- Conditional rendering based on login status -->
-    <template v-if="isLoggedIn">
+    <template v-if="isLoggedIn && authRole != 'Driver'">
       <h1>Welcome, {{ username }}!</h1>
 
       <div class="dashboard-actions">
@@ -71,10 +71,12 @@ export default {
       announcements: [], // List of announcements
       loading: true, // Loading state
       isLoggedIn: false, // Check if the user is logged in
+      authRole: null, // Store the role from localStorage
     };
   },
   created() {
     this.checkAuthentication(); // Check login status
+    this.authRole = localStorage.getItem("auth_role"); // Get value when component is created
     this.fetchAnnouncements(); // Fetch announcements
   },
   methods: {
