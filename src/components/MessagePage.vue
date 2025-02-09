@@ -13,18 +13,11 @@
           Compose
         </button>
         <button
-          @click="tab = 'inbox'"
+          @click="tab = 'messages'"
           class="px-4 py-2 focus:outline-none"
-          :class="tab === 'inbox' ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-600'"
+          :class="tab === 'messages' ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-600'"
         >
-          Inbox
-        </button>
-        <button
-          @click="tab = 'sent'"
-          class="px-4 py-2 focus:outline-none"
-          :class="tab === 'sent' ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-600'"
-        >
-          Sent
+          Messages
         </button>
       </div>
 
@@ -33,7 +26,7 @@
         <h3 class="text-lg font-semibold text-gray-800">Compose Message</h3>
 
         <form @submit.prevent="sendMessage" class="space-y-4">
-          <!-- Recipient -->
+          <!-- Recipient Dropdown -->
           <div>
             <label for="recipient" class="block text-sm font-medium text-gray-700 mb-1">Recipient</label>
             <select
@@ -41,29 +34,21 @@
               v-model="compose.recipient"
               class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             >
-              <option value="" disabled>Select recipient</option>
-              <option value="City Hall">City Hall</option>
-              <option value="Garbage Truck Driver">Garbage Truck Driver</option>
+              <option value="" disabled>Select a recipient</option>
+              <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
             </select>
           </div>
 
           <!-- Subject -->
           <div>
             <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-            <select
+            <input
               id="subject"
               v-model="compose.subject"
+              type="text"
+              placeholder="Enter subject"
               class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="" disabled>Select subject</option>
-              <option
-                v-for="(concern, index) in concerns"
-                :key="index"
-                :value="`${concern.title} (${concern.address})`"
-              >
-                {{ concern.title }} ({{ concern.address }})
-              </option>
-            </select>
+            />
           </div>
 
           <!-- Message -->
@@ -102,76 +87,141 @@
         </form>
       </div>
 
-      <!-- Inbox and Sent Tabs -->
-      <div v-if="tab === 'inbox'" class="space-y-6">...</div>
-      <div v-if="tab === 'sent'" class="space-y-6">...</div>
+      <!-- Messages Tab -->
+      <div v-if="tab === 'messages'" class="space-y-6">
+        <h3 class="text-lg font-semibold text-gray-800">Messages</h3>
 
-      <!-- Message Modal -->
-      <Dialog v-model:visible="messageModalVisible" header="Message Details" class="w-1/2" modal>...</Dialog>
+        <div v-for="(messages, recipientId) in groupedMessages" :key="recipientId" class="border-b pb-4 mb-4">
+          <h4 class="text-lg font-semibold text-gray-800 mb-2">{{ getUserNameById(recipientId) }}</h4>
+          <ul class="bg-white shadow rounded-lg p-4">
+            <template v-if="Array.isArray(messages)">
+              <li v-for="message in messages" :key="message.id" class="border-b py-2">
+                <strong>{{ message.subject }}</strong> - {{ message.message }}
+              </li>
+            </template>
+            <template v-else>
+              <li>No messages available</li>
+            </template>
+          </ul>
+        </div>
+
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import Dialog from 'primevue/dialog';
+import axios from 'axios';
 
 export default {
-  name: 'MessagingPage',
-  components: {
-    Dialog,
-  },
   data() {
     return {
-      tab: 'compose',
+      tab: 'messages', // Default tab is 'messages'
       compose: {
         recipient: '',
         subject: '',
         message: '',
         attachment: null,
       },
-      concerns: [],
-      inbox: [],
-      sent: [],
-      selectedMessage: null,
-      messageModalVisible: false,
+      messages: [], // Combined inbox and sent messages
+      groupedMessages: {}, // Grouped messages by recipient
+      users: [], // List of users to populate the dropdown
     };
   },
   mounted() {
-    this.fetchConcerns();
+    this.fetchMessages(); // Fetch messages
+    this.fetchUsers(); // Fetch the list of users
   },
   methods: {
-    fetchConcerns() {
-      // Simulating API call to fetch submitted concerns
-      this.concerns = [
-        { id: 1, title: 'Delay of Garbage Pickup', address: '123 Main St' },
-        { id: 2, title: 'No Pickup Schedule', address: '456 Elm St' },
-        { id: 3, title: 'Schedule of Pickup', address: '789 Maple Ave' },
-        { id: 4, title: 'Program', address: '101 Pine Blvd' },
-      ];
+    async fetchUsers() {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/users', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+        });
+        this.users = response.data;
+      } catch (error) {
+        console.error(error);
+        alert('Failed to load users.');
+      }
     },
-    sendMessage() {
+    async sendMessage() {
       if (!this.compose.recipient || !this.compose.subject || !this.compose.message) {
         alert('All fields are required.');
         return;
       }
-      this.sent.push({ ...this.compose });
-      this.compose = { recipient: '', subject: '', message: '', attachment: null };
-      alert('Message sent successfully.');
+
+      const formData = new FormData();
+      formData.append('recipient', this.compose.recipient);
+      formData.append('subject', this.compose.subject);
+      formData.append('message', this.compose.message);
+      if (this.compose.attachment) {
+        formData.append('attachment', this.compose.attachment);
+      }
+
+      try {
+        await axios.post('http://127.0.0.1:8000/api/messages/send', formData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        alert('Message sent successfully.');
+        this.fetchMessages(); // Refresh the messages after sending
+        this.compose = { recipient: '', subject: '', message: '', attachment: null };
+      } catch (error) {
+        console.error(error);
+        alert('Failed to send message.');
+      }
+    },
+    async fetchMessages() {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/messages', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+        });
+
+        console.log('API Response:', response); // Log the full API response
+
+        // Check if response.data is an object
+        if (response.data && typeof response.data === 'object') {
+          this.messages = response.data;
+          this.groupMessagesByRecipient();
+        } else {
+          console.error('Unexpected response format:', response.data);
+          alert('Failed to load messages. Invalid response format.');
+        }
+      } catch (error) {
+        console.error('Error fetching messages:', error); // Log the error
+        alert('Failed to load messages.');
+      }
+    },
+    groupMessagesByRecipient() {
+      // Ensure 'this.messages' is an object containing keys
+      if (typeof this.messages === 'object' && this.messages !== null) {
+        this.groupedMessages = {};  // Clear existing grouped messages
+
+        // Loop through the object keys
+        Object.keys(this.messages).forEach((recipientId) => {
+          const messages = this.messages[recipientId].messages; // Extract messages for the current recipient
+          this.groupedMessages[recipientId] = messages; // Group messages by recipientId
+        });
+      } else {
+        console.error('Expected messages data to be an object:', this.messages);
+      }
+    },
+    getUserNameById(id) {
+      const user = this.users.find((user) => user.id === id);
+      return user ? user.name : 'Unknown User';
     },
     onFileChange(event) {
       const file = event.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          this.compose.attachment = reader.result;
-        };
-        reader.readAsDataURL(file);
+        this.compose.attachment = file;
       }
     },
   },
 };
 </script>
-
-<style scoped>
-/* Add any additional styles here */
-</style>

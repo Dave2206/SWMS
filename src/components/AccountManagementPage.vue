@@ -20,7 +20,6 @@
       :style="{ width: '35vw' }"
     >
       <form @submit.prevent="createAccount">
-        <!-- Form Fields -->
         <div class="field mb-4">
           <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
           <InputText 
@@ -97,7 +96,6 @@
       :style="{ width: '35vw' }"
     >
       <form @submit.prevent="updateAccount">
-        <!-- Edit Form Fields -->
         <div class="field mb-4">
           <label for="edit-name" class="block text-sm font-medium text-gray-700">Name</label>
           <InputText 
@@ -160,6 +158,7 @@
   </div>
 </template>
 <script>
+import axios from 'axios';
 
 export default {
   data() {
@@ -167,66 +166,106 @@ export default {
       showCreateDialog: false,
       showEditDialog: false,
       showConfirmDialog: false,
-      roles: [
-        { label: 'Driver', value: 'Driver' },
-        { label: 'Barangay Officer', value: 'Barangay Officer' },
-        { label: 'LGU Officer', value: 'LGU Officer' },
-      ],
-      accounts: [
-        { name: 'John Doe', email: 'john.doe@example.com', role: 'Driver' },
-        { name: 'Jane Smith', email: 'jane.smith@example.com', role: 'Barangay Officer' },
-        { name: 'Mike Johnson', email: 'mike.johnson@example.com', role: 'LGU Officer' },
-      ],
+      roles: [], // Initially empty, will be populated from API
+      accounts: [],
       formData: {
         name: '',
         email: '',
         role: '',
       },
       editData: {},
-      selectedAccount: null, // Store the account to be deleted
+      selectedAccount: null,
     };
   },
+  created() {
+    this.fetchAccounts();
+    this.fetchRoles(); // Fetch roles when component is created
+  },
   methods: {
-    createAccount() {
-      try {
-        const newAccount = { ...this.formData };
-        this.accounts.push(newAccount);
-        this.resetFormData();
-        this.showCreateDialog = false;
-        this.showSuccessToast('Account created successfully');
-      } catch (error) {
-        this.showErrorToast('Failed to create account');
-      }
+    // Fetch all accounts
+    fetchAccounts() {
+      axios.get('http://127.0.0.1:8000/api/users')
+        .then(response => {
+          this.accounts = response.data;
+        })
+        .catch(error => {
+          this.showErrorToast('Failed to fetch accounts',error);
+        });
     },
+
+    // Fetch roles from API
+    fetchRoles() {
+      axios.get('http://127.0.0.1:8000/api/roles') // Update with your actual API endpoint
+        .then(response => {
+          this.roles = response.data.map(role => ({
+            label: role.user_role, // Adjust based on API response structure
+            value: role.id,   // Use role ID as value
+          }));
+        })
+        .catch(error => {
+          this.showErrorToast('Failed to fetch roles',error);
+        });
+    },
+
+    // Create a new account
+    createAccount() {
+      axios.post('http://127.0.0.1:8000/api/users', this.formData)
+        .then(response => {
+          this.accounts.push(response.data);
+          this.resetFormData();
+          this.showCreateDialog = false;
+          this.fetchAccounts();
+          this.showSuccessToast('Account created successfully');
+        })
+        .catch(error => {
+          this.showErrorToast('Failed to create account',error);
+        });
+    },
+
+    // Edit an existing account
     editAccount(account) {
       this.editData = { ...account };
       this.showEditDialog = true;
     },
+
+    // Update account information
     updateAccount() {
-      try {
-        const index = this.accounts.findIndex(a => a.email === this.editData.email);
-        if (index !== -1) {
-          this.accounts.splice(index, 1, { ...this.editData });
-        }
-        this.showEditDialog = false;
-        this.showSuccessToast('Account updated successfully');
-      } catch (error) {
-        this.showErrorToast('Failed to update account');
-      }
+      axios.put(`http://127.0.0.1:8000/api/users/${this.editData.id}`, this.editData)
+        .then(response => {
+          const index = this.accounts.findIndex(a => a.id === this.editData.id);
+          if (index !== -1) {
+            this.accounts.splice(index, 1, response.data);
+          }
+          this.showEditDialog = false;
+          this.fetchAccounts();
+          this.showSuccessToast('Account updated successfully');
+        })
+        .catch(error => {
+          this.showErrorToast('Failed to update account',error);
+        });
     },
+
+    // Confirm account deletion
     confirmDeleteAccount(account) {
       this.selectedAccount = account;
       this.showConfirmDialog = true;
     },
+
+    // Delete an account
     deleteAccount() {
-      try {
-        this.accounts = this.accounts.filter(a => a.email !== this.selectedAccount.email);
-        this.showConfirmDialog = false;
-        this.showSuccessToast('Account deleted successfully');
-      } catch (error) {
-        this.showErrorToast('Failed to delete account');
-      }
+      axios.delete(`http://127.0.0.1:8000/api/users/${this.selectedAccount.id}`)
+        .then(response => {
+          this.accounts = this.accounts.filter(a => a.id !== this.selectedAccount.id);
+          this.showConfirmDialog = false;
+          this.fetchAccounts();
+          this.showSuccessToast('Account deleted successfully',response.data.message);
+        })
+        .catch(error => {
+          this.showErrorToast('Failed to delete account',error);
+        });
     },
+
+    // Reset form data
     resetFormData() {
       this.formData = {
         name: '',
@@ -234,9 +273,13 @@ export default {
         role: '',
       };
     },
+
+    // Show success toast
     showSuccessToast(message) {
       this.$refs.toast.add({ severity: 'success', summary: 'Success', detail: message, life: 3000 });
     },
+
+    // Show error toast
     showErrorToast(message) {
       this.$refs.toast.add({ severity: 'error', summary: 'Error', detail: message, life: 3000 });
     },

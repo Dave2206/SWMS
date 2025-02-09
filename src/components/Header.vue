@@ -71,6 +71,8 @@
         </div>
       </div>
     </Dialog>
+     <!-- Toast Notification -->
+    <Toast ref="toast"></Toast>
 </template>
 
 <script>
@@ -98,6 +100,7 @@ export default {
           concern: { label: "Concerns", icon: "pi pi-comments", page: "ConcernPage" },
           reports_and_analytics: { label: "Reports and Analytics", icon: "pi pi-file", page: "ReportPage" },
           complain:{ label: "Complain", icon: "pi pi-folder-open", page: "ComplainPage"},
+          routes:{ label: "Routes", icon: "pi pi-folder-open", page: "RoutesPage"},
         };
 
         const route = routes[ability];
@@ -129,13 +132,15 @@ export default {
         this.isLoggedIn = true;
         this.showLoginModal = false;
 
+        this.$refs.toast.add({ severity: 'success', summary: 'Login successfully', detail: "Login successfully", life: 3000 });
+
         // Fetch user abilities
         await this.fetchAbilities();
 
         // Redirect to dashboard
         this.$router.push("/DashboardPage");
       } catch (error) {
-        console.error("Login failed:", error);
+         this.$refs.toast.add({ severity: 'error', summary: 'Login failed', detail: error.response.data.message, life: 3000 });
       }
     },
     logout() {

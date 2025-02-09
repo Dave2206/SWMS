@@ -8,6 +8,7 @@ import MessagePage from './components/MessagePage.vue';
 import ReportPage from './components/ReportPage.vue';
 import AccountManagementPage from './components/AccountManagementPage.vue';
 import DashboardPage  from './components/DashboardPage.vue';
+import RoutesPage  from './components/AssignedRoutesPage.vue';
 
 const routes = [
   {
@@ -49,6 +50,11 @@ const routes = [
     path: '/DashboardPage',
     name: 'DashboardPage',
     component: DashboardPage
+  },
+  {
+    path: '/RoutesPage',
+    name: 'RoutesPage',
+    component: RoutesPage
   },
 ];
 
