@@ -34,7 +34,7 @@ import '../src/styles/global.css';
 import router from './router.js'; // Import router
 import Toast from 'primevue/toast';
 import  Textarea  from 'primevue/textarea';
-import {useToast}  from 'primevue/usetoast';
+import useToast  from 'primevue/usetoast';
 
 const app = createApp(App);
 
@@ -81,6 +81,6 @@ Object.entries(components).forEach(([name, component]) => {
     app.component(name, component);
 });
 
-
+app.use(Toast);
 app.use(router);
 app.mount('#app');
